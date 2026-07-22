@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Template for Supabase connection settings.
+
+  Setup:
+    1. Copy this file to  Loop/Supabase-Info.plist
+    2. Replace the two placeholder values below with your project's values from
+       the Supabase dashboard (Settings > API Keys).
+    3. Loop/Supabase-Info.plist is git-ignored so your key isn't committed.
+
+  Notes:
+    - SUPABASE_ANON_KEY accepts either the modern "publishable key"
+      (sb_publishable_...) or the legacy anon key (a long JWT). Both are safe to
+      ship in a client because Row Level Security protects the data.
+    - Never put the service-role / secret key here; it belongs only in Edge
+      Functions.
+-->
+<plist version="1.0">
+<dict>
+	<key>SUPABASE_URL</key>
+	<string>https://YOUR-PROJECT-REF.supabase.co</string>
+	<key>SUPABASE_ANON_KEY</key>
+	<string>YOUR_PUBLISHABLE_OR_ANON_KEY</string>
+</dict>
+</plist>

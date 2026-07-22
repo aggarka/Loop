@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		CA00A6500000000000000002 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = CA00A6500000000000000001 /* Supabase */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		CA00A5DD30112E0C00C0F35B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -65,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CA00A6500000000000000002 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +130,7 @@
 			);
 			name = Loop;
 			packageProductDependencies = (
+				CA00A6500000000000000001 /* Supabase */,
 			);
 			productName = Loop;
 			productReference = CA00A5CB30112E0900C0F35B /* Loop.app */;
@@ -208,6 +214,9 @@
 			);
 			mainGroup = CA00A5C230112E0900C0F35B;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				CA00A64830115D3600C0F35B /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CA00A5CC30112E0900C0F35B /* Products */;
 			projectDirPath = "";
@@ -595,6 +604,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		CA00A64830115D3600C0F35B /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CA00A6500000000000000001 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CA00A64830115D3600C0F35B /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = CA00A5C330112E0900C0F35B /* Project object */;
 }

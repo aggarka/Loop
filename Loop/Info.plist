@@ -2,9 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Loop uses the camera to scan business cards and create contacts automatically.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Loop can import people from your contacts and export the people you add back to your contacts.</string>
+	<!-- DEV ONLY: allow plain HTTP to the local Supabase stack (127.0.0.1) during
+	     development. Remove or tighten this before shipping; the hosted backend
+	     uses HTTPS. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 </dict>
 </plist>
