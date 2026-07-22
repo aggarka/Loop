@@ -20,6 +20,13 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Method not allowed" }, 405);
   }
 
+  // Require a signed-in user (Requirement 9.6). The gateway's verify_jwt accepts
+  // the anon/publishable key too, so we additionally reject callers whose token
+  // isn't an authenticated user. The app sends the user's session token.
+  if (!isAuthenticatedUser(req)) {
+    return json({ error: "Unauthorized" }, 401);
+  }
+
   let body: RequestBody;
   try {
     body = await req.json();
@@ -114,4 +121,27 @@ function json(payload: unknown, status = 200): Response {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+// True only when the Authorization header carries a Supabase user JWT with the
+// `authenticated` role. The gateway has already verified the signature; here we
+// only inspect the claims. The anon/publishable key is not a decodable user JWT,
+// so anonymous callers are rejected.
+function isAuthenticatedUser(req: Request): boolean {
+  const header = req.headers.get("Authorization") ?? "";
+  const token = header.replace(/^Bearer\s+/i, "").trim();
+  const claims = decodeJwtPayload(token);
+  return claims?.role === "authenticated" && typeof claims.sub === "string" && claims.sub.length > 0;
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  try {
+    let payload = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    while (payload.length % 4 !== 0) payload += "=";
+    return JSON.parse(atob(payload));
+  } catch {
+    return null;
+  }
 }
