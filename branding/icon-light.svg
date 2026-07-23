@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.32" cy="0.28" r="0.9">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+
+  <!-- Two interlocking rings: staying "in the loop" / connected relationships -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="76" stroke-linecap="round">
+    <circle cx="406" cy="512" r="196"/>
+    <circle cx="618" cy="512" r="196" stroke-opacity="0.92"/>
+  </g>
+
+  <!-- Node dots hinting at people in the network -->
+  <g fill="#FFFFFF">
+    <circle cx="406" cy="316" r="30"/>
+    <circle cx="618" cy="708" r="30"/>
+  </g>
+</svg>
