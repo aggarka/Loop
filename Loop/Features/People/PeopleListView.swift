@@ -20,7 +20,9 @@ struct PeopleListView: View {
     @State private var isAdding = false
     @State private var isScanning = false
     @State private var isImporting = false
-    @State private var path: [Person] = []
+    /// Selected person drives the detail column on iPad and push navigation on
+    /// iPhone (NavigationSplitView collapses to a stack on compact width).
+    @State private var selectedPerson: Person?
 
     /// People owned by the current user that are not tombstoned.
     private var ownedPeople: [Person] {
@@ -41,105 +43,113 @@ struct PeopleListView: View {
     }
 
     var body: some View {
-        NavigationStack(path: $path) {
-            Group {
-                if ownedPeople.isEmpty {
-                    ContentUnavailableView {
-                        Label("No People Yet", systemImage: "person.2")
-                    } description: {
-                        Text("Add someone from your network to get started.")
-                    } actions: {
-                        Button("Add Person") { isAdding = true }
-                            .buttonStyle(.borderedProminent)
-                            .accessibilityIdentifier("addPersonEmptyState")
+        NavigationSplitView {
+            sidebar
+                .navigationTitle("People")
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        Menu {
+                            Button {
+                                isAdding = true
+                            } label: {
+                                Label("Add Manually", systemImage: "square.and.pencil")
+                            }
+                            Button {
+                                isScanning = true
+                            } label: {
+                                Label("Scan Business Card", systemImage: "camera")
+                            }
+                            Button {
+                                isImporting = true
+                            } label: {
+                                Label("Import from Contacts", systemImage: "person.crop.circle.badge.plus")
+                            }
+                        } label: {
+                            Label("Add Person", systemImage: "plus")
+                        }
                     }
-                } else if filteredPeople.isEmpty {
-                    ContentUnavailableView.search(text: searchText)
-                } else {
-                    peopleList
                 }
-            }
-            .navigationTitle("People")
-            .navigationDestination(for: Person.self) { person in
+                .searchable(text: $searchText, prompt: "Search name, company, title")
+                .sheet(isPresented: $isAdding) {
+                    PersonEditView()
+                }
+                .sheet(isPresented: $isScanning) {
+                    BusinessCardScanView()
+                }
+                .sheet(isPresented: $isImporting) {
+                    ContactsImportView()
+                }
+        } detail: {
+            if let person = selectedPerson, !person.isTombstoned {
                 PersonDetailView(person: person)
-            }
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Menu {
-                        Button {
-                            isAdding = true
-                        } label: {
-                            Label("Add Manually", systemImage: "square.and.pencil")
-                        }
-                        Button {
-                            isScanning = true
-                        } label: {
-                            Label("Scan Business Card", systemImage: "camera")
-                        }
-                        Button {
-                            isImporting = true
-                        } label: {
-                            Label("Import from Contacts", systemImage: "person.crop.circle.badge.plus")
-                        }
-                    } label: {
-                        Label("Add Person", systemImage: "plus")
-                    }
+            } else {
+                ContentUnavailableView {
+                    Label("Select a Person", systemImage: "person.crop.circle")
+                } description: {
+                    Text("Choose someone to see their details and timeline.")
                 }
-            }
-            .searchable(text: $searchText, prompt: "Search name, company, title")
-            .sheet(isPresented: $isAdding) {
-                PersonEditView()
-            }
-            .sheet(isPresented: $isScanning) {
-                BusinessCardScanView()
-            }
-            .sheet(isPresented: $isImporting) {
-                ContactsImportView()
             }
         }
         .onChange(of: router.pendingPersonID) { _, newValue in
             navigateToPendingPerson(newValue)
         }
         .onAppear { navigateToPendingPerson(router.pendingPersonID) }
+        // Clear selection once a person is deleted so the detail column resets.
+        .onChange(of: selectedPerson?.isTombstoned) { _, tombstoned in
+            if tombstoned == true { selectedPerson = nil }
+        }
     }
 
-    /// Pushes the person referenced by a tapped notification, then clears the
+    @ViewBuilder
+    private var sidebar: some View {
+        if ownedPeople.isEmpty {
+            ContentUnavailableView {
+                Label("No People Yet", systemImage: "person.2")
+            } description: {
+                Text("Add someone from your network to get started.")
+            } actions: {
+                Button("Add Person") { isAdding = true }
+                    .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("addPersonEmptyState")
+            }
+        } else if filteredPeople.isEmpty {
+            ContentUnavailableView.search(text: searchText)
+        } else {
+            List(selection: $selectedPerson) {
+                if !availableTags.isEmpty {
+                    Section {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(availableTags, id: \.self) { tag in
+                                    FilterChip(
+                                        title: tag,
+                                        isSelected: selectedTags.contains(tag)
+                                    ) { toggleTag(tag) }
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
+                    }
+                }
+
+                Section {
+                    ForEach(filteredPeople) { person in
+                        PersonRow(person: person).tag(person)
+                    }
+                }
+            }
+        }
+    }
+
+    /// Selects the person referenced by a tapped notification, then clears the
     /// router so it isn't re-consumed.
     private func navigateToPendingPerson(_ personID: String?) {
         guard let personID,
               let person = ownedPeople.first(where: { $0.id.uuidString == personID })
         else { return }
-        path = [person]
+        selectedPerson = person
         router.pendingPersonID = nil
-    }
-
-    private var peopleList: some View {
-        List {
-            if !availableTags.isEmpty {
-                Section {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(availableTags, id: \.self) { tag in
-                                FilterChip(
-                                    title: tag,
-                                    isSelected: selectedTags.contains(tag)
-                                ) { toggleTag(tag) }
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
-                    .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
-                }
-            }
-
-            Section {
-                ForEach(filteredPeople) { person in
-                    NavigationLink(value: person) {
-                        PersonRow(person: person)
-                    }
-                }
-            }
-        }
     }
 
     private func toggleTag(_ tag: String) {
