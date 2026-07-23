@@ -138,6 +138,12 @@ objectionable content → likely 4+), and provide contact info.
 
 ---
 
+## 5b. Content Rights (required to submit)
+
+App Information → **Content Rights** → Set Up:
+- Choose **"No, it does not contain, show, or access third-party content."**
+  (Users enter their own data; AI-generated text is not third-party content.)
+
 ## 6. App Privacy ("nutrition label")
 
 Under **App Privacy → Get Started**, declare data collection accurately:
