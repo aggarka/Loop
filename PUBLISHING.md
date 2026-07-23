@@ -15,8 +15,8 @@ here are already generated in this repo:
 
 ## 0. Before you start — replace placeholders
 
-- [ ] In `docs/privacy.html`, `docs/terms.html`, `docs/support.html`, replace
-      `support@example.com` with your real support email.
+- [x] Support email set to `kamal_a@hotmail.com` in `docs/privacy.html`,
+      `docs/terms.html`, and `docs/support.html`.
 - [ ] Decide the public **App Name** ("Loop" may be taken on the App Store — have a
       backup like "Loop: Networking Follow-ups"). The name must be unique.
 - [ ] Confirm the production Supabase project is live and the app's
@@ -28,13 +28,13 @@ here are already generated in this repo:
 
 App Store Connect requires a **Support URL** and a **Privacy Policy URL**.
 
-1. Push this repo (already done). In GitHub: **Settings → Pages**.
-2. Source: **Deploy from a branch**, Branch: **main**, Folder: **/docs**. Save.
-3. After a minute, your pages are live at:
-   - Support: `https://aggarka.github.io/Loop/support.html`
-   - Privacy: `https://aggarka.github.io/Loop/privacy.html`
-   - Terms: `https://aggarka.github.io/Loop/terms.html`
-4. Verify each URL loads before entering them in App Store Connect.
+GitHub Pages is **live** for this repo (Settings → Pages → branch `main`, folder
+`/docs`). Use these final URLs in App Store Connect:
+
+- Landing: `https://aggarka.github.io/Loop/`
+- Support: `https://aggarka.github.io/Loop/support.html`
+- Privacy: `https://aggarka.github.io/Loop/privacy.html`
+- Terms: `https://aggarka.github.io/Loop/terms.html`
 
 ---
 
