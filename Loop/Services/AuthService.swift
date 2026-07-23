@@ -79,10 +79,21 @@ final class AuthService {
         }
     }
 
+    /// Redirect target for the OAuth web flow. `ASWebAuthenticationSession`
+    /// intercepts this custom scheme to return control to the app; the same URL
+    /// must be in the Supabase project's allowed redirect URLs.
+    static let oauthRedirectURL = URL(string: "loop://auth-callback")!
+
     /// Google sign-in via the hosted OAuth flow (web). Requires the Google
-    /// provider to be configured on the Supabase project.
+    /// provider to be enabled on the Supabase project and this redirect URL to be
+    /// allow-listed there.
     func signInWithGoogle() async {
-        await perform { try await $0.auth.signInWithOAuth(provider: .google) }
+        await perform {
+            _ = try await $0.auth.signInWithOAuth(
+                provider: .google,
+                redirectTo: Self.oauthRedirectURL
+            )
+        }
     }
 
     // MARK: Session lifecycle
