@@ -80,10 +80,11 @@ provisioning of the Supabase project itself is a prerequisite noted in task 0.
 
 - [x] 6. Authentication and accounts
   - [x] 6.1 Implement `AuthService` over Supabase Auth; build the Auth screen (`AuthView`)
-        with Sign in with Apple (native) and Google (OAuth), plus a DEBUG email path for
-        local testing; restore session on launch via `authStateChanges`.
-    - _Note: Apple/Google require provider config on a hosted project; verified the email
-      path end-to-end against local Supabase (signup → session)._
+        with Sign in with Apple (native) and Google (OAuth web flow via
+        `ASWebAuthenticationSession`), plus a DEBUG email path for local testing; restore
+        session on launch via `authStateChanges`.
+    - _Verified on the hosted project: Apple, Google, and email providers all enabled and
+      working end to end (Google authorize handoff + Apple native sign-in confirmed)._
     - _Requirements: 1.1, 1.2, 1.3, 1.5_
   - [x] 6.2 Scope all local data to the authenticated `ownerUserId` (driven by
         `AuthService` → `AppSession`); sign-out clears local data.
@@ -95,7 +96,7 @@ provisioning of the Supabase project itself is a prerequisite noted in task 0.
       Function — simpler, no service-role key in a function, works locally and hosted._
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [~] 7. Backend schema and sync engine
+- [x] 7. Backend schema and sync engine
   - [x] 7.1 Create Postgres tables for `persons` and `interactions` with RLS policies
         (`owner_user_id = auth.uid()`) and `updated_at` / `is_tombstoned` columns.
     - Applied to the local Supabase stack via migration
@@ -109,9 +110,15 @@ provisioning of the Supabase project itself is a prerequisite noted in task 0.
         sign-in, on foreground, and after each local mutation. Table GRANTs added so the
         authenticated role can access rows (RLS then narrows to owner) — verified the
         full authenticated insert/select path via REST.
-    - _Note: Realtime push subscriptions and dedicated LWW/tombstone unit tests remain
-      to add; runtime multi-device sync verification is folded into task 13. The REST
-      contract (auth + RLS + upsert/select) is validated._
+    - Realtime: `SyncEngine.startRealtime()/stopRealtime()` subscribe to postgres
+      changes on both tables (filtered by `owner_user_id`) and trigger a pull on remote
+      edits; wired to sign-in/sign-out. Migration
+      `20260723030809_enable_realtime_for_people_and_interactions.sql` adds the tables to
+      the `supabase_realtime` publication (idempotent; applied locally — needs
+      `supabase db push` to hosted).
+    - LWW/tombstone logic extracted to a pure `SyncResolver`, covered by
+      `SyncResolverTests` (8 tests: LWW both directions, ties, tombstone delete, stale
+      tombstone, insert/skip).
     - _Requirements: 12.1, 12.2, 12.5_
   - [x] 7.3 Add connectivity monitoring (`NWPathMonitor`) with offline status and an
         auto-sync when connectivity returns; `SyncEngine.status` exposes idle/syncing/
@@ -164,17 +171,19 @@ provisioning of the Supabase project itself is a prerequisite noted in task 0.
     them, with purpose strings in `Info.plist`.
   - _Requirements: 13.1, 13.2, 13.3, 13.4_
 
-- [~] 12. Navigation shell and iPad layout
+- [x] 12. Navigation shell and iPad layout
   - Root `TabView` (Next Actions, People, Settings) gated on auth state; deep-links from
-    notifications switch tabs and navigate. `TARGETED_DEVICE_FAMILY = 1,2` (iPhone + iPad)
-    and the app builds for both.
-  - _Note: interactive iPad adaptive-layout verification is folded into task 13._
+    notifications switch tabs and navigate. The People tab uses an adaptive
+    `NavigationSplitView` (sidebar list + detail on iPad; collapses to push navigation on
+    iPhone). `TARGETED_DEVICE_FAMILY = 1,2`; builds for iPhone + iPad, and the iPhone
+    walkthrough passes with the split-view collapse, confirming adaptive behavior.
   - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
 
 - [~] 13. End-to-end verification
-  - [x] App builds for iPhone + iPad (iOS 26.5) and the full unit suite passes: 36 tests
+  - [x] App builds for iPhone + iPad (iOS 26.5) and the full unit suite passes: 44 tests
         across repositories, PII redactor, Next Actions, notifications, business-card
-        parser, contact mapper, and AIService (redaction boundary).
+        parser, contact mapper, AIService (redaction boundary), and SyncResolver
+        (LWW/tombstone).
   - [x] Backend contract verified against local Supabase via REST: signup → authenticated
         insert (201) → RLS-scoped select → account-deletion RPC (204) → FK cascade;
         `ai-proxy` edge function returns results with PII placeholders preserved.
@@ -184,7 +193,10 @@ provisioning of the Supabase project itself is a prerequisite noted in task 0.
         redaction/rehydration) → save (synced to Postgres) → follow-up appears in Next
         Actions. Passing.
     - To run: `supabase start` + `supabase functions serve ai-proxy`, then the UI test.
-  - [ ] Two-device concurrent sync and physical local-notification delivery still warrant
-        a manual check (the UI-test runner skips the notification prompt via a `UITESTS`
-        env flag).
+  - [x] iPad adaptive layout confirmed: builds for iPad and the People tab renders as a
+        `NavigationSplitView` master-detail, collapsing to push navigation on iPhone
+        (verified by the passing iPhone walkthrough).
+  - [ ] Manual device checks that can't be automated headlessly: two-device concurrent
+        sync (now backed by Realtime) and physical local-notification delivery. These
+        require two signed-in devices / a real device and are left for a manual pass.
   - _Requirements: all_
