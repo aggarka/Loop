@@ -20,7 +20,13 @@ here are already generated in this repo:
 - [ ] Decide the public **App Name** ("Loop" may be taken on the App Store — have a
       backup like "Loop: Networking Follow-ups"). The name must be unique.
 - [ ] Confirm the production Supabase project is live and the app's
-      `Loop/Supabase-Info.plist` points at it (currently the hosted project).
+      `Loop/Supabase-Info.plist` points at it. Run:
+      ```bash
+      ./scripts/verify-production.sh
+      ```
+      It reads the URL/key from the plist and checks auth, the `persons` table, the
+      `ai-proxy` function, and enabled providers. (Free-tier Supabase projects pause
+      after ~1 week idle — make sure it's not paused during App Review.)
 
 ---
 
