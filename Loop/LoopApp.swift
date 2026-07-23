@@ -73,10 +73,19 @@ struct LoopApp: App {
                 .environment(aiService)
                 .task { notificationRouter.register() }
                 .task { await authService.bootstrap() }
-                // Sync when the user becomes authenticated.
+                // Sync + start live updates when the user becomes authenticated;
+                // tear down realtime on sign-out.
                 .onChange(of: authService.state) { _, newState in
-                    if newState == .signedIn {
-                        Task { await syncEngine.sync() }
+                    switch newState {
+                    case .signedIn:
+                        Task {
+                            await syncEngine.sync()
+                            await syncEngine.startRealtime()
+                        }
+                    case .signedOut:
+                        Task { await syncEngine.stopRealtime() }
+                    case .loading:
+                        break
                     }
                 }
                 // Sync when returning to the foreground.

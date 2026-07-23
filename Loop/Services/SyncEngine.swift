@@ -35,6 +35,11 @@ final class SyncEngine {
     private var isOnline = true
     private var isSyncing = false
 
+    // Realtime
+    private var realtimeChannel: RealtimeChannelV2?
+    private var realtimeSubscriptions: [RealtimeSubscription] = []
+    private var realtimeOwnerId: String?
+
     init(client: SupabaseClient?, session: AppSession, modelContainer: ModelContainer) {
         self.client = client
         self.session = session
@@ -60,6 +65,51 @@ final class SyncEngine {
             }
         }
         monitor.start(queue: DispatchQueue(label: "loop.sync.monitor"))
+    }
+
+    // MARK: Realtime (Requirement 12.2 — live propagation)
+
+    /// Subscribes to postgres changes on the user's rows so edits from other
+    /// devices are pulled in live. Idempotent per owner; safe to call repeatedly.
+    func startRealtime() async {
+        guard let client else { return }
+        let owner = session.ownerUserId
+        guard UUID(uuidString: owner) != nil else { return }
+        if realtimeChannel != nil, realtimeOwnerId == owner { return }
+
+        await stopRealtime()
+        realtimeOwnerId = owner
+
+        let channel = client.channel("loop-sync-\(owner)")
+        let ownerFilter = RealtimePostgresFilter.eq("owner_user_id", value: owner)
+        let onChange: @Sendable (AnyAction) -> Void = { [weak self] _ in
+            Task { @MainActor in await self?.sync() }
+        }
+
+        for table in ["persons", "interactions"] {
+            let subscription = channel.onPostgresChange(
+                AnyAction.self,
+                schema: "public",
+                table: table,
+                filter: ownerFilter,
+                callback: onChange
+            )
+            realtimeSubscriptions.append(subscription)
+        }
+
+        await channel.subscribe()
+        realtimeChannel = channel
+    }
+
+    /// Tears down the realtime subscription (e.g. on sign-out).
+    func stopRealtime() async {
+        for subscription in realtimeSubscriptions { subscription.cancel() }
+        realtimeSubscriptions.removeAll()
+        if let channel = realtimeChannel {
+            await client?.removeChannel(channel)
+        }
+        realtimeChannel = nil
+        realtimeOwnerId = nil
     }
 
     // MARK: Full sync
@@ -159,16 +209,22 @@ final class SyncEngine {
             FetchDescriptor<Person>(predicate: #Predicate { $0.id == id })
         ).first
 
-        if let existing {
-            // Local unsynced edits that are newer win.
-            if existing.dirty && existing.updatedAt >= dto.updated_at { return }
-            if dto.is_tombstoned {
-                context.delete(existing)
-                return
-            }
-            apply(dto, to: existing)
-        } else {
-            guard !dto.is_tombstoned else { return }
+        let decision = SyncResolver.decide(
+            localExists: existing != nil,
+            localDirty: existing?.dirty ?? false,
+            localUpdatedAt: existing?.updatedAt,
+            remoteUpdatedAt: dto.updated_at,
+            remoteTombstoned: dto.is_tombstoned
+        )
+
+        switch decision {
+        case .skip, .keepLocal:
+            return
+        case .deleteLocal:
+            if let existing { context.delete(existing) }
+        case .applyRemote:
+            if let existing { apply(dto, to: existing) }
+        case .insertRemote:
             let person = Person(
                 id: dto.id,
                 ownerUserId: dto.owner_user_id.uuidString,
@@ -203,15 +259,22 @@ final class SyncEngine {
             FetchDescriptor<Interaction>(predicate: #Predicate { $0.id == id })
         ).first
 
-        if let existing {
-            if existing.dirty && existing.updatedAt >= dto.updated_at { return }
-            if dto.is_tombstoned {
-                context.delete(existing)
-                return
-            }
-            apply(dto, to: existing, in: context)
-        } else {
-            guard !dto.is_tombstoned else { return }
+        let decision = SyncResolver.decide(
+            localExists: existing != nil,
+            localDirty: existing?.dirty ?? false,
+            localUpdatedAt: existing?.updatedAt,
+            remoteUpdatedAt: dto.updated_at,
+            remoteTombstoned: dto.is_tombstoned
+        )
+
+        switch decision {
+        case .skip, .keepLocal:
+            return
+        case .deleteLocal:
+            if let existing { context.delete(existing) }
+        case .applyRemote:
+            if let existing { apply(dto, to: existing, in: context) }
+        case .insertRemote:
             let interaction = Interaction(
                 id: dto.id,
                 ownerUserId: dto.owner_user_id.uuidString,
