@@ -148,10 +148,16 @@ App Information → **Content Rights** → Set Up:
 
 Under **App Privacy → Get Started**, declare data collection accurately:
 
-- **Contact Info → Name, Email, Phone:** collected. Linked to the user's identity.
-  Purpose: **App Functionality**. Not used for tracking. Not used for advertising.
-- **User Content → Other (notes about contacts):** collected, linked, App
-  Functionality, not for tracking.
+- **Contact Info → Name, Email Address, Phone Number:** collected. Linked to the
+  user's identity. Purpose: **App Functionality**. Not used for tracking or advertising.
+- **Contacts:** collected. Because a user can import an individual contact (which is
+  then stored in their account), declare the **Contacts** data type. Linked to
+  identity: **Yes**. Tracking: **No**. Purpose: **App Functionality**.
+  (Loop only imports the single contact the user selects via the system picker; it
+  never reads the full address book — but Apple expects this type declared when any
+  imported contact is stored server-side.)
+- **User Content → Other User Content (interaction notes/outcomes):** collected,
+  linked, App Functionality, not for tracking.
 - **Identifiers → User ID:** collected (account id), App Functionality.
 - **Tracking:** **No** — Loop does not track users across apps/sites and has no
   third-party analytics or ad SDKs.
@@ -159,6 +165,11 @@ Under **App Privacy → Get Started**, declare data collection accurately:
 Notes for the reviewer about AI: the AI feature tokenizes personal identifiers
 (names, companies, emails, phones) on-device before sending text to the AI provider,
 and the endpoint is configured for no retention / no training.
+
+Notes for the reviewer about Contacts: Loop uses Apple's out-of-process contact
+picker, so it receives only the single contact the user taps and never reads the full
+address book. That one contact is stored in the user's own private account (RLS-scoped)
+so they can log follow-ups with the person. See the Privacy Policy for details.
 
 ---
 
