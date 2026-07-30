@@ -29,7 +29,7 @@
     <ul>
       <li>People you add (name, company, title, email, phone, tags, and how they were added).</li>
       <li>Interactions you log (date, type, notes, outcomes, and follow-up dates).</li>
-      <li>Optional data from features you use — business-card scans (processed on your device) and contacts you choose to import.</li>
+      <li>Optional data from features you use — business-card scans (processed on your device) and individual contacts you choose to import (only the specific contact you select is imported; Loop never reads your full address book).</li>
     </ul>
 
     <h2>How your data is stored and synced</h2>
@@ -38,6 +38,17 @@
       sign in, your data syncs to your private account on our backend (hosted on Supabase)
       so it stays consistent across your devices. Access is protected so that only you can
       read or write your own records.
+    </p>
+
+    <h2>Contacts</h2>
+    <p>
+      Loop never reads your address book in bulk and does not request permission to do so.
+      When you choose "Import from Contacts," Loop presents Apple's system contact picker,
+      which runs outside the app — Loop only receives the single contact you tap. That
+      contact's details (name, company, title, email, phone) are saved as a person in your
+      account and synced privately across your devices, solely so you can log conversations
+      and follow-ups with them. Exporting a person writes their details back to your device
+      Contacts at your request and does not upload anything.
     </p>
 
     <h2>Authentication</h2>
@@ -61,7 +72,7 @@
     <h2>Device permissions</h2>
     <ul>
       <li><strong>Camera</strong> — only when you scan a business card; images are processed on your device.</li>
-      <li><strong>Contacts</strong> — only when you import or export contacts, at your request.</li>
+      <li><strong>Contacts</strong> — only to export a person to your address book, or to import a single contact you pick via the system picker; Loop never reads your full address book.</li>
       <li><strong>Notifications</strong> — only to remind you of follow-ups you schedule.</li>
     </ul>
     <p>Loop works without granting these permissions; the related features are simply unavailable.</p>

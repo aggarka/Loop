@@ -5,7 +5,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Loop uses the camera to scan business cards and create contacts automatically.</string>
 	<key>NSContactsUsageDescription</key>
-	<string>Loop can import people from your contacts and export the people you add back to your contacts.</string>
+	<string>Loop uses Contacts only to save a person you add back into your address book, or to import a single contact you pick. It never reads your entire address book.</string>
 	<!-- DEV ONLY: allow plain HTTP to the local Supabase stack (127.0.0.1) during
 	     development. Remove or tighten this before shipping; the hosted backend
 	     uses HTTPS. -->
